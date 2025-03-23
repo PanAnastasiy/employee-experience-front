@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     AppBar,
     Toolbar,
@@ -13,37 +13,65 @@ import {
     Menu as MenuIcon,
     AccountCircle as AccountCircleIcon,
     ArrowDropDown as ArrowDropDownIcon,
+    MusicNote as MusicNoteIcon,
+    MusicOff as MusicOffIcon,
 } from '@mui/icons-material';
 import { useNavigation } from '../utils/UseNavigation';
 
 export default function Header() {
     const { navigateTo } = useNavigation();
 
-    // Состояние для выпадающего меню
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [isPlaying, setIsPlaying] = useState(false); // музыка вкл/выкл
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    useEffect(() => {
+        // Создаём аудио только один раз
+        audioRef.current = new Audio('/static/audio/background-music.mp3');
+        audioRef.current.loop = true;
+        audioRef.current.volume = 0.5;
+
+        return () => {
+            // Очищаем при размонтировании
+            audioRef.current?.pause();
+            audioRef.current = null;
+        };
+    }, []);
+
+    const toggleMusic = () => {
+        if (!audioRef.current) return;
+
+        if (isPlaying) {
+            audioRef.current.pause();
+        } else {
+            audioRef.current.play().catch(err => {
+                console.warn("Автовоспроизведение запрещено:", err);
+            });
+        }
+
+        setIsPlaying(!isPlaying);
+    };
+
     const open = Boolean(anchorEl);
 
-    // Обработчик открытия меню
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
     };
 
-    // Обработчик закрытия меню
     const handleClose = () => {
         setAnchorEl(null);
     };
 
     return (
-        <AppBar position="static" sx={{ backgroundColor: '#1976d2', padding:0}}>
-            <Toolbar sx={{ paddingLeft: 0 }}> {/* Убираем отступ слева */}
-                {/* Логотип и название сайта */}
+        <AppBar position="static" sx={{ backgroundColor: '#1976d2', padding: 0 }}>
+            <Toolbar sx={{ paddingLeft: 0 }}>
                 <Box
                     sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        cursor: 'pointer', // Добавляем курсор-указатель
+                        cursor: 'pointer',
                     }}
-                    onClick={() => navigateTo('/')} // Переход на главную страницу
+                    onClick={() => navigateTo('/')}
                 >
                     <IconButton
                         size="large"
@@ -52,15 +80,17 @@ export default function Header() {
                         aria-label="menu"
                         sx={{ marginRight: 1 }}
                     >
-                        <MenuIcon /> {/* Иконка меню */}
+                        <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" component="div">
                         Мой сайт
                     </Typography>
                 </Box>
 
-                {/* Основные пункты меню */}
-                <Box sx={{ flexGrow: 1 }} /> {/* Пустое пространство между элементами */}
+                <Box sx={{ flexGrow: 1 }} />
+                <Button color="inherit" onClick={() => navigateTo('/news')}>
+                    Новости
+                </Button>
                 <Button color="inherit" onClick={() => navigateTo('/')}>
                     Главная
                 </Button>
@@ -71,7 +101,11 @@ export default function Header() {
                     Список всех работников
                 </Button>
 
-                {/* Выпадающее меню */}
+                {/* Кнопка вкл/выкл музыки */}
+                <IconButton color="inherit" onClick={toggleMusic} title="Музыка">
+                    {isPlaying ? <MusicNoteIcon /> : <MusicOffIcon />}
+                </IconButton>
+
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <IconButton
                         size="large"

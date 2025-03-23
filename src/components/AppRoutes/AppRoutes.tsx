@@ -6,6 +6,7 @@ import AboutPage from "../AboutPage/AboutPage";
 import Preview from "../Preview/Preview";
 import {Documentation} from "../Documentation/Documentation";
 import EmployeePage from "../EmployeePage/EmployeePage";
+import NewsPage from "../NewsPage/NewsPage";
 
 
 export const AppRoutes = () => {
@@ -17,6 +18,7 @@ export const AppRoutes = () => {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/documentation" element={<Documentation />} />
             <Route path="/employees" element={<EmployeePage />} />
+            <Route path="/news" element={<NewsPage />} />
 
         </Routes>
     );

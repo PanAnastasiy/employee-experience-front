@@ -10,7 +10,9 @@ body, html {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: linear-gradient(135deg, #6a11cb, #2575fc); /* Градиентный фон */
+    background-size: cover;
+    opacity: 0.5;
+    background-image: url("C:\Users\user\IdeaProjects\employee-experience-front\public\static\images\preview-back.jpg") ;
     color: white;
     text-align: center;
 }
