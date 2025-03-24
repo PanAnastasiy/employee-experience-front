@@ -95,7 +95,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onEdit, onDele
     return (
         <>
             <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 700 }} aria-label="customized table">
+                <Table sx={{ minWidth: 500 }} aria-label="customized table">
                     <TableHead>
                         <TableRow>
                             <StyledTableCell>Идентификационный номер</StyledTableCell>

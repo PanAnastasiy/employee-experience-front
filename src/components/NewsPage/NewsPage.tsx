@@ -1,31 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import './NewsPage.css';
+import {Article} from "../../types/Article";
+import {fetchArticles} from "../../api/habr";
 
-interface Article {
-    title: string;
-    link: string;
-    pubDate: string;
-    imageUrl: string | null;
-}
+
 
 const NewsPage: React.FC = () => {
     const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/habr/rss')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Ошибка при загрузке данных');
-                }
-                return response.json();
-            })
-            .then((data: Article[]) => {
+        fetchArticles()
+            .then((data) => {
                 setArticles(data);
                 setLoading(false);
             })
-            .catch(error => {
-                console.error('Ошибка:', error);
+            .catch(() => {
                 setLoading(false);
             });
     }, []);
