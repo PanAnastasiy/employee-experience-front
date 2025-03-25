@@ -31,7 +31,7 @@ export const createEmployee = async (employee: Omit<Employee, 'id' | 'fullName'>
         });
 
         if (!response.ok) {
-            throw new Error('Ошибка при создании сотрудника');
+            throw new Error('Работник с заданным email уже существует.');
         }
 
         return response.json(); // Возвращаем созданного сотрудника с сервера

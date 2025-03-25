@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow,
     Paper, Avatar, IconButton, TextField,
-    Dialog, DialogActions, DialogContent, DialogTitle, Button
+    Dialog, DialogActions, DialogContent, DialogTitle, Button, MenuItem
 } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import EditIcon from '@mui/icons-material/Edit';
@@ -11,7 +11,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
-import { Employee } from '../../../types/Employee';
+import {Employee} from '../../../types/Employee';
+import Box from "@mui/material/Box";
+import {SnackbarMessage} from "../../SnackBarMessage/SnackBarMessage";
 
 interface Props {
     employees: Employee[];
@@ -41,6 +43,18 @@ const EmployeeTable: React.FC<Props> = ({
     });
     const [openDialog, setOpenDialog] = useState(false);
     const [employeeIdToDelete, setEmployeeIdToDelete] = useState<number | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+    };
+
+    const filteredEmployees = employees.filter(emp => {
+        const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
+        const email = emp.email.toLowerCase();
+        return fullName.includes(searchQuery.toLowerCase()) || email.includes(searchQuery.toLowerCase());
+    });
 
     const handleEditClick = (emp: Employee) => {
         setEditMode(emp.id);
@@ -67,8 +81,8 @@ const EmployeeTable: React.FC<Props> = ({
     };
 
     const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setEditedEmployee(prev => ({ ...prev, [name]: value }));
+        const {name, value} = e.target;
+        setEditedEmployee(prev => ({...prev, [name]: value}));
     };
 
     const handleSaveClick = (id: number) => {
@@ -100,26 +114,73 @@ const EmployeeTable: React.FC<Props> = ({
 
     return (
         <>
-            <TableContainer component={Paper} sx={{ maxHeight: 600 }}>
-                <Table stickyHeader size="small">
+            <Box sx={{display: 'flex', gap: 2, mb: 2}}>
+                <TextField
+                    label="Поиск"
+                    variant="outlined"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    fullWidth
+                />
+                <TextField
+                    label="Проект"
+                    variant="outlined"
+                    fullWidth
+                    select
+                >
+                    <MenuItem value="projectA">1</MenuItem>
+                    <MenuItem value="projectB">2</MenuItem>
+                    <MenuItem value="projectC">3</MenuItem>
+                </TextField>
+                <TextField
+                    label="Навыки"
+                    variant="outlined"
+                    fullWidth
+                    select
+                >
+                    <MenuItem value="frontend">Frontend</MenuItem>
+                    <MenuItem value="backend">Backend</MenuItem>
+                    <MenuItem value="devops">DevOps</MenuItem>
+                </TextField>
+                <TextField
+                    label="Должность"
+                    variant="outlined"
+                    fullWidth
+                    select
+                >
+                    <MenuItem value="junior">Junior</MenuItem>
+                    <MenuItem value="middle">Middle</MenuItem>
+                    <MenuItem value="senior">Senior</MenuItem>
+                </TextField>
+            </Box>
+
+            <TableContainer
+                component={Paper}
+                sx={{
+                    maxHeight: 600,
+                    minWidth: 1000,  // Установите минимальную ширину таблицы
+                    overflow: 'auto', // Добавляем прокрутку при необходимости
+                }}
+            >
+                <Table stickyHeader size="small" sx={{ fontSize: '0.875rem', tableLayout: 'auto' }}>
                     <TableHead>
                         <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>Фото</TableCell>
-                            <TableCell>Имя</TableCell>
-                            <TableCell>Фамилия</TableCell>
-                            <TableCell>Email</TableCell>
-                            <TableCell>Дата найма</TableCell>
-                            <TableCell>Профиль</TableCell>
-                            <TableCell align="right">Действия</TableCell>
+                            <TableCell sx={{ minWidth: 30, padding: '8px', wordWrap: 'break-word' }}>ID</TableCell>
+                            <TableCell sx={{ minWidth: 50, padding: '8px', wordWrap: 'break-word' }}>Фото</TableCell>
+                            <TableCell sx={{ minWidth: 100, padding: '8px', wordWrap: 'break-word' }}>Имя</TableCell>
+                            <TableCell sx={{ minWidth: 100, padding: '8px', wordWrap: 'break-word' }}>Фамилия</TableCell>
+                            <TableCell sx={{ minWidth: 150, padding: '8px', wordWrap: 'break-word' }}>Email</TableCell>
+                            <TableCell sx={{ minWidth: 100, padding: '8px', wordWrap: 'break-word' }}>Дата найма</TableCell>
+                            <TableCell sx={{ minWidth: 30, padding: '8px', textAlign: 'right', wordWrap: 'break-word' }}>Профиль</TableCell>
+                            <TableCell sx={{ minWidth: 60, padding: '8px', textAlign: 'right', wordWrap: 'break-word' }}>Действия</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {employees.map((emp) => (
+                        {filteredEmployees.map((emp) => (
                             <TableRow key={emp.id}>
-                                <TableCell>{emp.id}</TableCell>
+                                <TableCell sx={{ wordWrap: 'break-word' }}>{emp.id}</TableCell>
                                 <TableCell>
-                                    <Avatar src={emp.photoUrl || '/static/images/default-avatar.png'} />
+                                    <Avatar src={`/static/images/employees/photo${emp.id}.jpg`} />
                                 </TableCell>
                                 {editMode === emp.id ? (
                                     <>
@@ -145,10 +206,7 @@ const EmployeeTable: React.FC<Props> = ({
                                     </>
                                 )}
                                 <TableCell>
-                                    <IconButton
-                                        color="primary"
-                                        onClick={() => alert(`Открываем профиль сотрудника №${emp.id}`)}
-                                    >
+                                    <IconButton color="primary" onClick={() => alert(`Открываем профиль сотрудника №${emp.id}`)}>
                                         <OpenInNewIcon />
                                     </IconButton>
                                 </TableCell>
@@ -175,7 +233,7 @@ const EmployeeTable: React.FC<Props> = ({
                                 </TableCell>
                             </TableRow>
                         ))}
-
+                        {/* Добавление нового сотрудника */}
                         {adding ? (
                             <TableRow>
                                 <TableCell>—</TableCell>
@@ -227,6 +285,8 @@ const EmployeeTable: React.FC<Props> = ({
                 </Table>
             </TableContainer>
 
+
+
             <Dialog open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>Подтверждение удаления</DialogTitle>
                 <DialogContent>
@@ -241,6 +301,7 @@ const EmployeeTable: React.FC<Props> = ({
                     </Button>
                 </DialogActions>
             </Dialog>
+
         </>
     );
 };

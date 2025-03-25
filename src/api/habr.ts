@@ -10,6 +10,6 @@ export const fetchArticles = async (): Promise<Article[]> => {
         return data;
     } catch (error) {
         console.error('Ошибка:', error);
-        throw error; // Перебрасываем ошибку для обработки в компоненте
+        throw error;
     }
 };

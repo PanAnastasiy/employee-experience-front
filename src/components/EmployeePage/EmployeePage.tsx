@@ -5,6 +5,9 @@ import { getAllEmployees, updateEmployee, deleteEmployee, createEmployee } from 
 import { styled } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 
+import './EmployeePage.css';
+import {SnackbarMessage} from "../SnackBarMessage/SnackBarMessage";
+
 const PageContainer = styled('div')({
     display: 'grid',
     gridTemplateColumns: '1fr 2fr',
@@ -17,6 +20,30 @@ const fadeIn = {
     visible: { opacity: 1, y: 0, transition: { duration: 1 } },
 };
 
+const imageAnimation = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 2, ease: 'easeInOut' } },
+};
+
+
+const col = {
+    color: 'white'
+};
+
+
+const textAnimation = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 5, ease: 'easeInOut' } },
+};
+
+const ImageContainer = styled('div')({
+    position: 'relative',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    borderRadius: '20px', // Обрезаем углы
+    height: '100%', // Обеспечим, что картинка будет соответствовать области
+});
+
 const EmployeePage: React.FC = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [newEmployee, setNewEmployee] = useState<Omit<Employee, 'id' | 'fullName'>>({
@@ -25,6 +52,19 @@ const EmployeePage: React.FC = () => {
         email: '',
         hireDate: '',
     });
+
+    const pulseAnimation = {
+        hidden: { scale: 1 },
+        visible: {
+            scale: [1, 1.1, 1],
+            transition: {
+                duration: 1,
+                repeat: Infinity,
+                repeatDelay: 0.5,
+                ease: 'easeInOut',
+            },
+        },
+    };
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -42,7 +82,6 @@ const EmployeePage: React.FC = () => {
 
         fetchEmployees();
 
-        // Звук при появлении страницы
         const audio = new Audio('/static/audio/single.mp3');
         audio.volume = 0.3;
         audio.play().catch((err) => console.warn('Ошибка воспроизведения звука:', err));
@@ -53,8 +92,12 @@ const EmployeePage: React.FC = () => {
         setNewEmployee({ ...newEmployee, [name]: value });
     };
 
+    const [notification, setNotification] = useState<{
+        message: string;
+        type: "success" | "error";
+    }>();
+
     const handleAdd = async () => {
-        // Проверка заполненности полей с более информативными сообщениями
         if (!newEmployee.firstName?.trim()) {
             console.error('Поле "Имя" обязательно для заполнения!');
             return;
@@ -73,23 +116,20 @@ const EmployeePage: React.FC = () => {
         }
 
         try {
-            console.log('Отправка данных нового сотрудника:', newEmployee);
-
-            // Создаём сотрудника на сервере
             const createdEmployee = await createEmployee({
                 ...newEmployee,
                 firstName: newEmployee.firstName.trim(),
                 lastName: newEmployee.lastName.trim(),
                 email: newEmployee.email.trim(),
             });
-
+            setNotification({
+                message: "Сотрудник успешно добавлен!",
+                type: "success",
+            });
             if (!createdEmployee) {
                 throw new Error('Сервер не вернул данные созданного сотрудника');
             }
 
-            console.log('Сотрудник успешно создан:', createdEmployee);
-
-            // Обновляем состояние
             setEmployees((prevEmployees) => [
                 ...prevEmployees,
                 {
@@ -97,20 +137,18 @@ const EmployeePage: React.FC = () => {
                     fullName: `${createdEmployee.firstName} ${createdEmployee.lastName}`,
                 },
             ]);
-
-            // Сбрасываем форму
-            setNewEmployee({
-                firstName: '',
-                lastName: '',
-                email: '',
-                hireDate: '',
+        } catch (error: any) {
+            setNotification({
+                message: error.message,
+                type: "error",
             });
-
-        } catch (error) {
-            console.error('Ошибка при добавлении сотрудника:', error);
-            // Можно добавить уведомление для пользователя
-            alert('Произошла ошибка при добавлении сотрудника. Пожалуйста, попробуйте ещё раз.');
         }
+        setNewEmployee({
+            firstName: '',
+            lastName: '',
+            email: '',
+            hireDate: '',
+        });
     };
 
     const handleEdit = async (id: number, updatedEmployee: Omit<Employee, 'id' | 'fullName'>) => {
@@ -127,24 +165,31 @@ const EmployeePage: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         try {
-            // Отправляем запрос на сервер для удаления сотрудника
             const success = await deleteEmployee(id);
             if (success) {
-                // Если удаление прошло успешно, фильтруем список сотрудников
+                setNotification({
+                    message: `Сотрудник  №${id} успешно удалён.`,
+                    type: "success",
+                });
                 setEmployees((prevEmployees) =>
                     prevEmployees.filter((employee) => employee.id !== id)
                 );
             }
-        } catch (error) {
-            console.error('Ошибка при удалении сотрудника:', error);
+        } catch (error: any) {
+            setNotification({
+                message: error.message || "Произошла ошибка при удалении cотрудника №" + id,
+                type: "error",
+            });
         }
     };
 
     return (
-        <PageContainer>
+        <PageContainer className="page-container">
             <motion.div initial="hidden" animate="visible" variants={fadeIn}>
                 <div>
-                    <h1>Список сотрудников</h1>
+                    <motion.h1 variants={pulseAnimation} style = {col}>
+                        Список сотрудников
+                    </motion.h1>
                     <EmployeeTable
                         employees={employees}
                         newEmployee={newEmployee}
@@ -155,8 +200,46 @@ const EmployeePage: React.FC = () => {
                     />
                 </div>
             </motion.div>
+            <ImageContainer>
+                <motion.div
+                    style={{
+                        position: 'absolute',
+                        top: '10%', // Позиционируем в верхний левый угол
+                        left: '10%',
+                        color: 'white',
+                        fontSize: '48px',
+                        fontWeight: 'bold',
+                        width: '50px' ,
+                        zIndex: 1, // Пишем текст поверх изображения
+                    }}
+                    variants={textAnimation}
+                    initial="hidden"
+                    animate="visible"
+                >
+                    Создаем великое. Вместе!
+                </motion.div>
+                <motion.img
+                    src="/static/images/employee-nav.jpg"
+                    alt="Employee Image"
+                    variants={imageAnimation}
+                    initial="hidden"
+                    animate="visible"
+                    style={{
+                        width: '95%',
+                        height: '65%',
+                        objectFit: 'cover',
+                        borderRadius: '15px', // Закругляем углы изображения
+                    }}
+                />
+            </ImageContainer>
+            <SnackbarMessage
+                notification={notification}
+                handleClose={() => setNotification(undefined)}
+            />
         </PageContainer>
+
     );
 };
 
 export default EmployeePage;
+
