@@ -3,16 +3,7 @@ import EmployeeTable from './EmployeeTable/EmployeeTable';
 import { Employee } from '../../types/Employee';
 import { getAllEmployees, updateEmployee, deleteEmployee, createEmployee } from '../../api/employees';
 import { styled } from '@mui/material/styles';
-import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
 import { motion } from 'framer-motion';
-
-const FormContainer = styled(Paper)(({ theme }) => ({
-    padding: theme.spacing(3),
-    marginRight: theme.spacing(2),
-    backgroundColor: theme.palette.background.paper,
-}));
 
 const PageContainer = styled('div')({
     display: 'grid',
@@ -63,18 +54,62 @@ const EmployeePage: React.FC = () => {
     };
 
     const handleAdd = async () => {
+        // Проверка заполненности полей с более информативными сообщениями
+        if (!newEmployee.firstName?.trim()) {
+            console.error('Поле "Имя" обязательно для заполнения!');
+            return;
+        }
+        if (!newEmployee.lastName?.trim()) {
+            console.error('Поле "Фамилия" обязательно для заполнения!');
+            return;
+        }
+        if (!newEmployee.email?.trim()) {
+            console.error('Поле "Email" обязательно для заполнения!');
+            return;
+        }
+        if (!newEmployee.hireDate) {
+            console.error('Поле "Дата найма" обязательно для заполнения!');
+            return;
+        }
+
         try {
-            const createdEmployee = await createEmployee(newEmployee);
-            if (createdEmployee) {
-                const employeeWithId: Employee = {
+            console.log('Отправка данных нового сотрудника:', newEmployee);
+
+            // Создаём сотрудника на сервере
+            const createdEmployee = await createEmployee({
+                ...newEmployee,
+                firstName: newEmployee.firstName.trim(),
+                lastName: newEmployee.lastName.trim(),
+                email: newEmployee.email.trim(),
+            });
+
+            if (!createdEmployee) {
+                throw new Error('Сервер не вернул данные созданного сотрудника');
+            }
+
+            console.log('Сотрудник успешно создан:', createdEmployee);
+
+            // Обновляем состояние
+            setEmployees((prevEmployees) => [
+                ...prevEmployees,
+                {
                     ...createdEmployee,
                     fullName: `${createdEmployee.firstName} ${createdEmployee.lastName}`,
-                };
-                setEmployees([...employees, employeeWithId]);
-                setNewEmployee({ firstName: '', lastName: '', email: '', hireDate: '' });
-            }
+                },
+            ]);
+
+            // Сбрасываем форму
+            setNewEmployee({
+                firstName: '',
+                lastName: '',
+                email: '',
+                hireDate: '',
+            });
+
         } catch (error) {
             console.error('Ошибка при добавлении сотрудника:', error);
+            // Можно добавить уведомление для пользователя
+            alert('Произошла ошибка при добавлении сотрудника. Пожалуйста, попробуйте ещё раз.');
         }
     };
 
@@ -92,8 +127,14 @@ const EmployeePage: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         try {
-            await deleteEmployee(id);
-            setEmployees(employees.filter((employee) => employee.id !== id));
+            // Отправляем запрос на сервер для удаления сотрудника
+            const success = await deleteEmployee(id);
+            if (success) {
+                // Если удаление прошло успешно, фильтруем список сотрудников
+                setEmployees((prevEmployees) =>
+                    prevEmployees.filter((employee) => employee.id !== id)
+                );
+            }
         } catch (error) {
             console.error('Ошибка при удалении сотрудника:', error);
         }
@@ -102,58 +143,15 @@ const EmployeePage: React.FC = () => {
     return (
         <PageContainer>
             <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-                <FormContainer elevation={3}>
-                    <h2>Добавить нового сотрудника</h2>
-                    <form onSubmit={(e) => e.preventDefault()}>
-                        <TextField
-                            fullWidth
-                            label="Имя"
-                            name="firstName"
-                            value={newEmployee.firstName}
-                            onChange={handleInputChange}
-                            margin="normal"
-                        />
-                        <TextField
-                            fullWidth
-                            label="Фамилия"
-                            name="lastName"
-                            value={newEmployee.lastName}
-                            onChange={handleInputChange}
-                            margin="normal"
-                        />
-                        <TextField
-                            fullWidth
-                            label="Email"
-                            name="email"
-                            type="email"
-                            value={newEmployee.email}
-                            onChange={handleInputChange}
-                            margin="normal"
-                        />
-                        <TextField
-                            fullWidth
-                            label="Дата найма"
-                            name="hireDate"
-                            type="date"
-                            value={newEmployee.hireDate}
-                            onChange={handleInputChange}
-                            margin="normal"
-                            InputLabelProps={{ shrink: true }}
-                        />
-                        <Button variant="contained" color="primary" onClick={handleAdd}>
-                            Добавить
-                        </Button>
-                    </form>
-                </FormContainer>
-            </motion.div>
-
-            <motion.div initial="hidden" animate="visible" variants={fadeIn}>
                 <div>
                     <h1>Список сотрудников</h1>
                     <EmployeeTable
                         employees={employees}
+                        newEmployee={newEmployee}
+                        onAdd={handleAdd}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onInputChange={handleInputChange}
                     />
                 </div>
             </motion.div>

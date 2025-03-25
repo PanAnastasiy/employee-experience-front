@@ -5,4 +5,5 @@ export interface Employee {
     email: string;
     hireDate: string;
     fullName?: string;
+    photoUrl?: string;
 }

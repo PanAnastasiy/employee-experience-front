@@ -75,10 +75,12 @@ export const deleteEmployee = async (id: number) => {
             throw new Error('Ошибка при удалении сотрудника');
         }
 
-        return await response.json();
+        // Возвращаем true, чтобы подтвердить успешное удаление
+        return true;
     } catch (error) {
         console.error("Error deleting employee:", error);
         throw error;
     }
 };
+
 

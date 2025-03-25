@@ -8,6 +8,11 @@ import {
     MenuItem,
     IconButton,
     Box,
+    Drawer,
+    List,
+    ListItem,
+    ListItemText,
+    Divider,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -15,6 +20,9 @@ import {
     ArrowDropDown as ArrowDropDownIcon,
     MusicNote as MusicNoteIcon,
     MusicOff as MusicOffIcon,
+    ArrowForward as ArrowForwardIcon,
+    ArrowBack as ArrowBackIcon,
+    PushPin as PushPinIcon,
 } from '@mui/icons-material';
 import { useNavigation } from '../utils/UseNavigation';
 
@@ -24,6 +32,8 @@ export default function Header() {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [isPlaying, setIsPlaying] = useState(false); // музыка вкл/выкл
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [openDrawer, setOpenDrawer] = useState(false); // Состояние для бокового меню
+    const [isDrawerPinned, setIsDrawerPinned] = useState(false); // Состояние для закрепления меню
 
     useEffect(() => {
         // Создаём аудио только один раз
@@ -62,6 +72,15 @@ export default function Header() {
         setAnchorEl(null);
     };
 
+    const toggleDrawer = () => {
+        if (isDrawerPinned) return; // Если панель закреплена, то не изменяем её состояние
+        setOpenDrawer(!openDrawer);
+    };
+
+    const togglePinDrawer = () => {
+        setIsDrawerPinned(!isDrawerPinned);
+    };
+
     return (
         <AppBar position="static" sx={{ backgroundColor: '#1976d2', padding: 0 }}>
             <Toolbar sx={{ paddingLeft: 0 }}>
@@ -83,7 +102,7 @@ export default function Header() {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" component="div">
-                        Мой сайт
+                        PanCompany
                     </Typography>
                 </Box>
 
@@ -146,6 +165,56 @@ export default function Header() {
                     </Menu>
                 </Box>
             </Toolbar>
+
+            {/* Боковая панель */}
+            <Drawer
+                anchor="left"
+                open={openDrawer}
+                onClose={toggleDrawer}
+                variant={isDrawerPinned ? "persistent" : "temporary"}
+                sx={{
+                    width: 240,
+                    flexShrink: 0,
+                    '& .MuiDrawer-paper': {
+                        width: 240,
+                        boxSizing: 'border-box',
+                    },
+                }}
+                BackdropProps={{
+                    invisible: true, // Убираем затемнение фона
+                }}
+            >
+                <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    {/* Содержимое меню */}
+                    <List>
+                        <ListItem onClick={() => navigateTo('/')}>
+                            <ListItemText primary="Главная" />
+                        </ListItem>
+                        <ListItem onClick={() => navigateTo('/news')}>
+                            <ListItemText primary="Новости" />
+                        </ListItem>
+                        <ListItem onClick={() => navigateTo('/about')}>
+                            <ListItemText primary="О нас" />
+                        </ListItem>
+                        <ListItem onClick={() => navigateTo('/employees')}>
+                            <ListItemText primary="Список работников" />
+                        </ListItem>
+                    </List>
+
+                    <Divider />
+
+                    {/* Значок закрепления на панели в правом верхнем углу бокового меню */}
+                    <Box sx={{ marginTop: 'auto', padding: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                        <IconButton
+                            color="inherit"
+                            onClick={togglePinDrawer}
+                            title={isDrawerPinned ? "Открепить меню" : "Закрепить меню"}
+                        >
+                            <PushPinIcon />
+                        </IconButton>
+                    </Box>
+                </Box>
+            </Drawer>
         </AppBar>
     );
 }
