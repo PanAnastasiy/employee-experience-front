@@ -12,9 +12,9 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useNavigation } from '../utils/UseNavigation';
+import { useNavigation } from '../utils/useNavigation';
+import { SnackbarMessage } from "../SnackBarMessage/SnackBarMessage";
 
-// Тема для MUI (опционально)
 const defaultTheme = createTheme();
 
 function Copyright() {
@@ -55,6 +55,69 @@ export default function Registration() {
         confirmPassword: '',
     });
 
+    const [notification, setNotification] = useState<{
+        message: string;
+        type: "success" | "error";
+    }>();
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (validateForm()) {
+            try {
+                const response = await fetch('http://localhost:8080/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: formData.login,
+                        email: formData.email,
+                        password: formData.password,
+                        confirmPassword: formData.confirmPassword,
+                        allowExtraEmails: formData.allowExtraEmails,
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Ошибки с сервера
+                    if (result.message.includes('Ник')) {
+                        setErrors({
+                            ...errors,
+                            login: result.message,
+                        });
+                    } else if (result.message.includes('Е-mail')) {
+                        setErrors({
+                            ...errors,
+                            email: result.message,
+                        });
+                    }
+
+                    setNotification({
+                        message: result.message,
+                        type: "error",
+                    });
+                } else {
+                    setNotification({
+                        message: 'Регистрация прошла успешно!',
+                        type: "success",
+                    });
+                    navigateTo('/login');
+                }
+            } catch (error) {
+                console.error('Ошибка регистрации:', error);
+                setNotification({
+                    message: 'Произошла ошибка при регистрации.',
+                    type: "error",
+                });
+            }
+        } else {
+            console.log('Форма содержит ошибки');
+        }
+    };
+
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, checked, type } = event.target;
         setFormData({
@@ -79,13 +142,11 @@ export default function Registration() {
 
         let isValid = true;
 
-        // Проверка логина
         if (!formData.login) {
             newErrors.login = 'Логин обязателен';
             isValid = false;
         }
 
-        // Проверка email
         if (!formData.email) {
             newErrors.email = 'Email обязателен';
             isValid = false;
@@ -94,7 +155,6 @@ export default function Registration() {
             isValid = false;
         }
 
-        // Проверка пароля
         if (!formData.password) {
             newErrors.password = 'Пароль обязателен';
             isValid = false;
@@ -103,7 +163,6 @@ export default function Registration() {
             isValid = false;
         }
 
-        // Проверка повторения пароля
         if (!formData.confirmPassword) {
             newErrors.confirmPassword = 'Повторите пароль';
             isValid = false;
@@ -114,17 +173,6 @@ export default function Registration() {
 
         setErrors(newErrors);
         return isValid;
-    };
-
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        if (validateForm()) {
-            console.log('Form Data Submitted:', formData);
-            // Здесь можно добавить логику для отправки данных на сервер
-        } else {
-            console.log('Form has errors');
-        }
     };
 
     return (
@@ -248,6 +296,10 @@ export default function Registration() {
                 </Box>
                 <Copyright />
             </Container>
+            <SnackbarMessage
+                notification={notification}
+                handleClose={() => setNotification(undefined)}
+            />
         </ThemeProvider>
     );
 }

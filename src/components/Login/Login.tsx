@@ -12,9 +12,11 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import {useNavigation} from "../utils/UseNavigation";
+import { useNavigation } from '../utils/useNavigation';
+import { Loading } from "../Loading/Loading";
+import { Snackbar, SnackbarContent } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 
-// Тема для MUI (опционально)
 const defaultTheme = createTheme();
 
 function Copyright() {
@@ -31,7 +33,7 @@ function Copyright() {
 }
 
 interface FormData {
-    email: string;
+    username: string;
     password: string;
     remember: boolean;
 }
@@ -39,10 +41,11 @@ interface FormData {
 export default function Login() {
     const { navigateTo } = useNavigation();
     const [formData, setFormData] = useState<FormData>({
-        email: '',
+        username: '',
         password: '',
         remember: false,
     });
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, checked, type } = event.target;
@@ -52,11 +55,68 @@ export default function Login() {
         });
     };
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const [notification, setNotification] = useState<{
+        message: string;
+        type: "success" | "error";
+    } | null>(null);
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        console.log('Form Data Submitted:', formData);
-        // Здесь можно добавить логику для отправки данных на сервер
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:8080/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: formData.username,
+                    password: formData.password,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Ошибка при авторизации');
+            }
+            const result = await response.json();
+            console.log('Авторизация успешна:', result);
+
+            localStorage.setItem('token', result.token);
+            localStorage.setItem('user', result.username);
+            localStorage.setItem('role', result.role);
+
+            setNotification({
+                message: "Успешный вход!",
+                type: "success",
+            });
+            setLoading(false);
+            setTimeout(() => {
+                navigateTo('/news');
+            }, 1000); // Пауза перед редиректом
+        } catch (error) {
+            setLoading(false);
+            if (error instanceof Error) {
+                setNotification({
+                    message: `Ошибка: ${error.message}`,
+                    type: "error",
+                });
+            } else {
+                setNotification({
+                    message: "Неизвестная ошибка",
+                    type: "error",
+                });
+            }
+        }
     };
+
+    const handleCloseSnackbar = () => {
+        setNotification(null);
+    };
+
+    if (loading) {
+        return <Loading open />;
+    }
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -74,19 +134,19 @@ export default function Login() {
                         <LockOutlinedIcon />
                     </Avatar>
                     <Typography component="h1" variant="h5">
-                        Sign in
+                        Вход
                     </Typography>
                     <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1 }}>
                         <TextField
                             margin="normal"
                             required
                             fullWidth
-                            id="email"
-                            label="Email Address"
-                            name="email"
-                            autoComplete="email"
+                            id="username"
+                            label="Имя пользователя"
+                            name="username"
+                            autoComplete="username"
                             autoFocus
-                            value={formData.email}
+                            value={formData.username}
                             onChange={handleChange}
                         />
                         <TextField
@@ -94,7 +154,7 @@ export default function Login() {
                             required
                             fullWidth
                             name="password"
-                            label="Password"
+                            label="Пароль"
                             type="password"
                             id="password"
                             autoComplete="current-password"
@@ -110,7 +170,7 @@ export default function Login() {
                                     onChange={handleChange}
                                 />
                             }
-                            label="Remember me"
+                            label="Запомнить меня"
                         />
                         <Button
                             type="submit"
@@ -118,7 +178,7 @@ export default function Login() {
                             variant="contained"
                             sx={{ mt: 3, mb: 2 }}
                         >
-                            Sign In
+                            Войти
                         </Button>
                         <Grid container>
                             <Grid item xs>
@@ -126,8 +186,8 @@ export default function Login() {
                                     href="#"
                                     variant="body2"
                                     onClick={(e) => {
-                                        e.preventDefault(); // Предотвращаем стандартное поведение ссылки
-                                        navigateTo('/registration'); // Переход на страницу регистрации
+                                        e.preventDefault();
+                                        navigateTo('/registration');
                                     }}
                                     style={{ textDecoration: 'none' }}
                                 >
@@ -139,8 +199,28 @@ export default function Login() {
                         </Grid>
                     </Box>
                 </Box>
-                <Copyright/>
+                <Copyright />
             </Container>
+
+            {/* Snackbar для уведомлений */}
+            <Snackbar
+                open={Boolean(notification)}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <SnackbarContent
+                    sx={{
+                        backgroundColor: notification?.type === 'error' ? 'error.main' : 'success.main',
+                    }}
+                    message={notification?.message}
+                    action={
+                        <Button color="inherit" size="small" onClick={handleCloseSnackbar}>
+                            <CloseIcon fontSize="small" />
+                        </Button>
+                    }
+                />
+            </Snackbar>
         </ThemeProvider>
     );
 }

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
     Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow,
@@ -13,7 +13,8 @@ import CancelIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import {Employee} from '../../../types/Employee';
 import Box from "@mui/material/Box";
-import {SnackbarMessage} from "../../SnackBarMessage/SnackBarMessage";
+import {useNavigate} from "react-router-dom";
+
 
 interface Props {
     employees: Employee[];
@@ -32,6 +33,7 @@ const EmployeeTable: React.FC<Props> = ({
                                             onAdd,
                                             onInputChange
                                         }) => {
+    const navigate = useNavigate();
     const [editMode, setEditMode] = useState<number | null>(null);
     const [adding, setAdding] = useState(false);
     const [editedEmployee, setEditedEmployee] = useState<Omit<Employee, 'id' | 'fullName'>>({
@@ -44,8 +46,7 @@ const EmployeeTable: React.FC<Props> = ({
     const [openDialog, setOpenDialog] = useState(false);
     const [employeeIdToDelete, setEmployeeIdToDelete] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-
-
+    const tableContainerRef = useRef<HTMLDivElement | null>(null);
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
     };
@@ -70,6 +71,19 @@ const EmployeeTable: React.FC<Props> = ({
     const handleAddClick = () => {
         setAdding(true);
     };
+
+    // Прокрутка до конца после добавления нового сотрудника
+    useEffect(() => {
+        if (adding && tableContainerRef.current) {
+            // Ожидаем завершения рендеринга нового сотрудника
+            setTimeout(() => {
+                tableContainerRef.current?.scrollTo({
+                    top: tableContainerRef?.current.scrollHeight,
+                    behavior: 'smooth',
+                });
+            }, 100);
+        }
+    }, [adding]);
 
     const handleAddSave = () => {
         if (!newEmployee.firstName || !newEmployee.lastName || !newEmployee.email || !newEmployee.hireDate) {
@@ -157,9 +171,9 @@ const EmployeeTable: React.FC<Props> = ({
             <TableContainer
                 component={Paper}
                 sx={{
-                    maxHeight: 600,
-                    minWidth: 1000,  // Установите минимальную ширину таблицы
-                    overflow: 'auto', // Добавляем прокрутку при необходимости
+                    maxHeight: 400,
+                    minWidth: 1000,
+                    overflow: 'auto',
                 }}
             >
                 <Table stickyHeader size="small" sx={{ fontSize: '0.875rem', tableLayout: 'auto' }}>
@@ -171,7 +185,7 @@ const EmployeeTable: React.FC<Props> = ({
                             <TableCell sx={{ minWidth: 100, padding: '8px', wordWrap: 'break-word' }}>Фамилия</TableCell>
                             <TableCell sx={{ minWidth: 150, padding: '8px', wordWrap: 'break-word' }}>Email</TableCell>
                             <TableCell sx={{ minWidth: 100, padding: '8px', wordWrap: 'break-word' }}>Дата найма</TableCell>
-                            <TableCell sx={{ minWidth: 30, padding: '8px', textAlign: 'right', wordWrap: 'break-word' }}>Профиль</TableCell>
+                            <TableCell sx={{ minWidth: 30, padding: '8px', wordWrap: 'break-word' }}>Профиль</TableCell>
                             <TableCell sx={{ minWidth: 60, padding: '8px', textAlign: 'right', wordWrap: 'break-word' }}>Действия</TableCell>
                         </TableRow>
                     </TableHead>
@@ -185,16 +199,45 @@ const EmployeeTable: React.FC<Props> = ({
                                 {editMode === emp.id ? (
                                     <>
                                         <TableCell>
-                                            <TextField name="firstName" value={editedEmployee.firstName} onChange={handleEditChange} size="small" />
+                                            <TextField
+                                                name="firstName"
+                                                value={editedEmployee.firstName}
+                                                onChange={handleEditChange}
+                                                size="small"
+                                                sx={{ fontSize: '0.875rem', width: '100%' }}
+                                                inputProps={{ style: { fontSize: '0.875rem' } }}
+                                            />
                                         </TableCell>
                                         <TableCell>
-                                            <TextField name="lastName" value={editedEmployee.lastName} onChange={handleEditChange} size="small" />
+                                            <TextField
+                                                name="lastName"
+                                                value={editedEmployee.lastName}
+                                                onChange={handleEditChange}
+                                                size="small"
+                                                sx={{ fontSize: '0.875rem', width: '100%' }}
+                                                inputProps={{ style: { fontSize: '0.875rem' } }}
+                                            />
                                         </TableCell>
                                         <TableCell>
-                                            <TextField name="email" value={editedEmployee.email} onChange={handleEditChange} size="small" />
+                                            <TextField
+                                                name="email"
+                                                value={editedEmployee.email}
+                                                onChange={handleEditChange}
+                                                size="small"
+                                                sx={{ fontSize: '0.875rem', width: '100%' }}
+                                                inputProps={{ style: { fontSize: '0.875rem' } }}
+                                            />
                                         </TableCell>
                                         <TableCell>
-                                            <TextField name="hireDate" type="date" value={editedEmployee.hireDate} onChange={handleEditChange} size="small" />
+                                            <TextField
+                                                name="hireDate"
+                                                type="date"
+                                                value={editedEmployee.hireDate}
+                                                onChange={handleEditChange}
+                                                size="small"
+                                                sx={{ fontSize: '0.875rem', width: '100%' }}
+                                                inputProps={{ style: { fontSize: '0.875rem' } }}
+                                            />
                                         </TableCell>
                                     </>
                                 ) : (
@@ -206,7 +249,7 @@ const EmployeeTable: React.FC<Props> = ({
                                     </>
                                 )}
                                 <TableCell>
-                                    <IconButton color="primary" onClick={() => alert(`Открываем профиль сотрудника №${emp.id}`)}>
+                                    <IconButton color="primary" onClick={() => navigate(`/employees/${emp.id}`)}>
                                         <OpenInNewIcon />
                                     </IconButton>
                                 </TableCell>
@@ -233,7 +276,6 @@ const EmployeeTable: React.FC<Props> = ({
                                 </TableCell>
                             </TableRow>
                         ))}
-                        {/* Добавление нового сотрудника */}
                         {adding ? (
                             <TableRow>
                                 <TableCell>—</TableCell>
@@ -241,16 +283,45 @@ const EmployeeTable: React.FC<Props> = ({
                                     <Avatar src={newEmployee.photoUrl || '/static/images/default-avatar.png'} />
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="firstName" value={newEmployee.firstName} onChange={onInputChange} size="small" />
+                                    <TextField
+                                        name="firstName"
+                                        value={newEmployee.firstName}
+                                        onChange={onInputChange}
+                                        size="small"
+                                        sx={{ fontSize: '0.875rem', width: '100%' }}
+                                        inputProps={{ style: { fontSize: '0.875rem' } }}
+                                    />
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="lastName" value={newEmployee.lastName} onChange={onInputChange} size="small" />
+                                    <TextField
+                                        name="lastName"
+                                        value={newEmployee.lastName}
+                                        onChange={onInputChange}
+                                        size="small"
+                                        sx={{ fontSize: '0.875rem', width: '100%' }}
+                                        inputProps={{ style: { fontSize: '0.875rem' } }}
+                                    />
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="email" value={newEmployee.email} onChange={onInputChange} size="small" />
+                                    <TextField
+                                        name="email"
+                                        value={newEmployee.email}
+                                        onChange={onInputChange}
+                                        size="small"
+                                        sx={{ fontSize: '0.875rem', width: '100%' }}
+                                        inputProps={{ style: { fontSize: '0.875rem' } }}
+                                    />
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="hireDate" type="date" value={newEmployee.hireDate} onChange={onInputChange} size="small" />
+                                    <TextField
+                                        name="hireDate"
+                                        type="date"
+                                        value={newEmployee.hireDate}
+                                        onChange={onInputChange}
+                                        size="small"
+                                        sx={{ fontSize: '0.875rem', width: '100%' }}
+                                        inputProps={{ style: { fontSize: '0.875rem' } }}
+                                    />
                                 </TableCell>
                                 <TableCell />
                                 <TableCell align="right">
@@ -284,6 +355,7 @@ const EmployeeTable: React.FC<Props> = ({
                     </TableBody>
                 </Table>
             </TableContainer>
+
 
 
 

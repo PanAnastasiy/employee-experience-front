@@ -7,6 +7,11 @@ import {Documentation} from "../Documentation/Documentation";
 import EmployeePage from "../EmployeePage/EmployeePage";
 import NewsPage from "../NewsPage/NewsPage";
 import Registration from "../Registration/Registration";
+import EmployeeProfile from "../EmployeeProfile/EmployeeProfile";
+import PositionPage from "../PositionPage/PositionPage";
+import TechnologyPage from "../TechnologyPage/TechnologyPage";
+import ProjectList from "../ProjectList/ProjectList";
+import ProjectEdit from "../ProjectEdit/ProjectEdit";
 
 
 export const AppRoutes = () => {
@@ -58,13 +63,20 @@ export const AppRoutes = () => {
 
     return (
         <Routes>
+            <Route path="/employees/:id" element={<EmployeeProfile />} />
             <Route path="/" element={<Preview />} />
             <Route path="/login" element={<Login />} />
             <Route path="/registration" element={<Registration />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/documentation" element={<Documentation />} />
             <Route path="/employees" element={<EmployeePage />} />
+            <Route path="/positions" element={<PositionPage />} />
+            <Route path="/technologies" element={<TechnologyPage />} />
             <Route path="/news" element={<NewsPage />} />
+            <Route path="/projects" element={<ProjectList />} />
+            <Route path="/projects/create" element={<ProjectEdit />} />
+            <Route path="/projects/:id" element={<ProjectEdit />} />
+            <Route path="*" element={<ProjectList />} />
         </Routes>
     );
 };

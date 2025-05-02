@@ -37,11 +37,12 @@ const textAnimation = {
 };
 
 const ImageContainer = styled('div')({
+    paddingTop: '20px',
     position: 'relative',
     maxWidth: '100%',
     overflow: 'hidden',
-    borderRadius: '20px', // Обрезаем углы
-    height: '100%', // Обеспечим, что картинка будет соответствовать области
+    borderRadius: '20px',
+    height: '100%',
 });
 
 const EmployeePage: React.FC = () => {
@@ -90,6 +91,26 @@ const EmployeePage: React.FC = () => {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setNewEmployee({ ...newEmployee, [name]: value });
+    };
+
+    const col = {
+        color: 'white',
+        textAlign: 'center' as 'center',
+        fontFamily: "'Roboto', sans-serif",
+        textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
+        letterSpacing: '2px',
+        fontSize: '3rem',
+        fontWeight: 'bold',
+        backgroundImage: 'linear-gradient(45deg, #ff4081, #3f51b5)',
+        backgroundClip: 'text',
+        WebkitBackgroundClip: 'text',
+        padding: '10px',
+        transition: 'all 0.3s ease-in-out',
+    };
+
+    const textAnimation = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { duration: 2, ease: 'easeInOut' } },
     };
 
     const [notification, setNotification] = useState<{
@@ -158,8 +179,16 @@ const EmployeePage: React.FC = () => {
                 emp.id === id ? { ...emp, ...updated, fullName: `${updated.firstName} ${updated.lastName}` } : emp
             );
             setEmployees(updatedEmployees);
-        } catch (error) {
+            setNotification({
+                message: `Сотрудник  №${id} успешно изменен.`,
+                type: "success",
+            });
+        } catch (error: any) {
             console.error('Ошибка при обновлении сотрудника:', error);
+            setNotification({
+                message: error.message || "Произошла ошибка при редактировании cотрудника №" + id,
+                type: "error",
+            });
         }
     };
 
@@ -187,7 +216,7 @@ const EmployeePage: React.FC = () => {
         <PageContainer className="page-container">
             <motion.div initial="hidden" animate="visible" variants={fadeIn}>
                 <div>
-                    <motion.h1 variants={pulseAnimation} style = {col}>
+                    <motion.h1 variants={pulseAnimation} style={col}>
                         Список сотрудников
                     </motion.h1>
                     <EmployeeTable
@@ -204,13 +233,13 @@ const EmployeePage: React.FC = () => {
                 <motion.div
                     style={{
                         position: 'absolute',
-                        top: '10%', // Позиционируем в верхний левый угол
+                        top: '10%',
                         left: '10%',
                         color: 'white',
                         fontSize: '48px',
                         fontWeight: 'bold',
-                        width: '50px' ,
-                        zIndex: 1, // Пишем текст поверх изображения
+                        width: '50px',
+                        zIndex: 1,
                     }}
                     variants={textAnimation}
                     initial="hidden"
@@ -225,13 +254,14 @@ const EmployeePage: React.FC = () => {
                     initial="hidden"
                     animate="visible"
                     style={{
-                        width: '95%',
-                        height: '65%',
+                        maxWidth: '100%',
+                        maxHeight: '613px',
                         objectFit: 'cover',
-                        borderRadius: '15px', // Закругляем углы изображения
+                        borderRadius: '15px',
                     }}
                 />
             </ImageContainer>
+
             <SnackbarMessage
                 notification={notification}
                 handleClose={() => setNotification(undefined)}

@@ -11,8 +11,12 @@ import {
     Drawer,
     List,
     ListItem,
+    ListItemIcon,
     ListItemText,
     Divider,
+    CssBaseline,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -20,29 +24,54 @@ import {
     ArrowDropDown as ArrowDropDownIcon,
     MusicNote as MusicNoteIcon,
     MusicOff as MusicOffIcon,
-    ArrowForward as ArrowForwardIcon,
-    ArrowBack as ArrowBackIcon,
+    Home as HomeIcon,
+    Info as InfoIcon,
+    People as PeopleIcon,
+    Settings as SettingsIcon,
+    Person as PersonIcon,
+    ExitToApp as ExitToAppIcon,
     PushPin as PushPinIcon,
+    ChevronLeft as ChevronLeftIcon,
+    ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
-import { useNavigation } from '../utils/UseNavigation';
+import { styled } from '@mui/material/styles';
+import { useNavigation } from '../utils/useNavigation';
+import { getUser } from '../utils/getUser';
+
+const DrawerHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    padding: theme.spacing(0, 1),
+    ...theme.mixins.toolbar,
+    justifyContent: 'flex-end',
+}));
 
 export default function Header() {
     const { navigateTo } = useNavigation();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [isPlaying, setIsPlaying] = useState(false); // музыка вкл/выкл
+    const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [openDrawer, setOpenDrawer] = useState(false); // Состояние для бокового меню
-    const [isDrawerPinned, setIsDrawerPinned] = useState(false); // Состояние для закрепления меню
+    const [openDrawer, setOpenDrawer] = useState(false);
+    const [isDrawerPinned, setIsDrawerPinned] = useState(false);
+
+    const user = getUser();
+    const isAuthenticated = !!user.role;
+    const userRole = user.role as keyof typeof roleBasedNavItems | undefined;
 
     useEffect(() => {
-        // Создаём аудио только один раз
+        if (isMobile && isDrawerPinned) {
+            setIsDrawerPinned(false);
+        }
+    }, [isMobile, isDrawerPinned]);
+
+    useEffect(() => {
         audioRef.current = new Audio('/static/audio/background-music.mp3');
         audioRef.current.loop = true;
         audioRef.current.volume = 0.5;
-
         return () => {
-            // Очищаем при размонтировании
             audioRef.current?.pause();
             audioRef.current = null;
         };
@@ -50,19 +79,15 @@ export default function Header() {
 
     const toggleMusic = () => {
         if (!audioRef.current) return;
-
         if (isPlaying) {
             audioRef.current.pause();
         } else {
             audioRef.current.play().catch(err => {
-                console.warn("Автовоспроизведение запрещено:", err);
+                console.warn('Автовоспроизведение запрещено:', err);
             });
         }
-
         setIsPlaying(!isPlaying);
     };
-
-    const open = Boolean(anchorEl);
 
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -73,105 +98,139 @@ export default function Header() {
     };
 
     const toggleDrawer = () => {
-        if (isDrawerPinned) return; // Если панель закреплена, то не изменяем её состояние
+        if (isDrawerPinned) return;
         setOpenDrawer(!openDrawer);
     };
 
     const togglePinDrawer = () => {
         setIsDrawerPinned(!isDrawerPinned);
+        if (!isDrawerPinned) {
+            setOpenDrawer(true);
+        }
     };
 
+    const handleDrawerClose = () => {
+        if (!isDrawerPinned) {
+            setOpenDrawer(false);
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.clear();
+        navigateTo('/');
+    };
+
+    const handleProfileRedirect = () => {
+        if (!isAuthenticated) {
+            navigateTo('/');
+        } else {
+            navigateTo('/profile');
+        }
+    };
+
+    const publicNavItems = [
+        { text: 'Главная', path: '/', icon: <HomeIcon /> },
+        { text: 'Новости', path: '/news', icon: <HomeIcon /> },
+        { text: 'О нас', path: '/about', icon: <InfoIcon /> },
+    ];
+
+    const roleBasedNavItems = {
+        ROLE_ADMIN: [
+            { text: 'Сотрудники', path: '/employees', icon: <PeopleIcon /> },
+            { text: 'Позиции', path: '/positions', icon: <PeopleIcon /> },
+            { text: 'Навыки', path: '/technologies', icon: <PeopleIcon /> },
+            { text: 'Проекты', path: '/projects', icon: <PeopleIcon /> },
+        ],
+        ROLE_USER: [
+            { text: 'Проекты', path: '/projects', icon: <PeopleIcon /> },
+        ],
+    };
+
+    const drawerNavItems = [
+        ...publicNavItems,
+        ...(userRole && roleBasedNavItems[userRole] ? roleBasedNavItems[userRole] : []),
+    ];
+
+    const accountItems =  [
+        { text: 'Профиль', path: '/profile', icon: <PersonIcon /> },
+        { text: 'Настройки', path: '/settings', icon: <SettingsIcon /> },
+        { text: 'Выйти', path: '/logout', icon: <ExitToAppIcon />, onClick: handleLogout },
+    ];
+
     return (
-        <AppBar position="static" sx={{ backgroundColor: '#1976d2', padding: 0 }}>
-            <Toolbar sx={{ paddingLeft: 0 }}>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                    }}
-                    onClick={() => navigateTo('/')}
-                >
-                    <IconButton
-                        size="large"
-                        edge="start"
-                        color="inherit"
-                        aria-label="menu"
-                        sx={{ marginRight: 1 }}
-                    >
+        <>
+            <CssBaseline />
+            <AppBar position="static" sx={{ zIndex: theme.zIndex.drawer + 1 }}>
+                <Toolbar>
+                    <IconButton size="large" edge="start" color="inherit" onClick={toggleDrawer} sx={{ mr: 2 }}>
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" component="div">
+
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1, cursor: 'pointer' }} onClick={() => navigateTo('/')}>
                         PanCompany
                     </Typography>
-                </Box>
 
-                <Box sx={{ flexGrow: 1 }} />
-                <Button color="inherit" onClick={() => navigateTo('/news')}>
-                    Новости
-                </Button>
-                <Button color="inherit" onClick={() => navigateTo('/')}>
-                    Главная
-                </Button>
-                <Button color="inherit" onClick={() => navigateTo('/about')}>
-                    О нас
-                </Button>
-                <Button color="inherit" onClick={() => navigateTo('/employees')}>
-                    Список всех работников
-                </Button>
+                    {!isMobile && (
+                        <Box sx={{ display: 'flex' }}>
+                            {publicNavItems.map(item => (
+                                <Button key={item.path} color="inherit" onClick={() => navigateTo(item.path)} sx={{ mx: 0.5 }}>
+                                    {item.text}
+                                </Button>
+                            ))}
+                            {isAuthenticated && (
+                                <Button color="inherit" onClick={() => navigateTo('/profile')} sx={{ mx: 0.5 }}>
+                                    Профиль
+                                </Button>
+                            )}
+                        </Box>
+                    )}
 
-                {/* Кнопка вкл/выкл музыки */}
-                <IconButton color="inherit" onClick={toggleMusic} title="Музыка">
-                    {isPlaying ? <MusicNoteIcon /> : <MusicOffIcon />}
-                </IconButton>
+                    <IconButton color="inherit" onClick={toggleMusic} title="Музыка" sx={{ ml: 1 }}>
+                        {isPlaying ? <MusicNoteIcon /> : <MusicOffIcon />}
+                    </IconButton>
 
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <IconButton
                         size="large"
-                        edge="end"
                         color="inherit"
-                        aria-label="account of current user"
+                        aria-label="account"
                         aria-controls="menu-appbar"
                         aria-haspopup="true"
                         onClick={handleMenu}
+                        sx={{ ml: 1 }}
                     >
                         <AccountCircleIcon />
-                        <ArrowDropDownIcon />
+                        <ArrowDropDownIcon fontSize="small" />
                     </IconButton>
+
                     <Menu
                         id="menu-appbar"
                         anchorEl={anchorEl}
-                        anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }}
+                        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                         keepMounted
-                        transformOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }}
-                        open={open}
+                        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                        open={Boolean(anchorEl)}
                         onClose={handleClose}
                     >
-                        <MenuItem onClick={() => { navigateTo('/profile'); handleClose(); }}>
-                            Профиль
-                        </MenuItem>
-                        <MenuItem onClick={() => { navigateTo('/settings'); handleClose(); }}>
-                            Настройки
-                        </MenuItem>
-                        <MenuItem onClick={() => { navigateTo('/logout'); handleClose(); }}>
-                            Выйти
-                        </MenuItem>
+                        {accountItems.map(item => (
+                            <MenuItem
+                                key={item.path}
+                                onClick={() => {
+                                    item.onClick ? item.onClick() : (item.text === 'Профиль' ? handleProfileRedirect() : navigateTo(item.path));
+                                    handleClose();
+                                }}
+                            >
+                                <ListItemIcon>{item.icon}</ListItemIcon>
+                                {item.text}
+                            </MenuItem>
+                        ))}
                     </Menu>
-                </Box>
-            </Toolbar>
+                </Toolbar>
+            </AppBar>
 
-            {/* Боковая панель */}
             <Drawer
-                anchor="left"
+                variant={isDrawerPinned ? 'persistent' : 'temporary'}
                 open={openDrawer}
-                onClose={toggleDrawer}
-                variant={isDrawerPinned ? "persistent" : "temporary"}
+                onClose={handleDrawerClose}
                 sx={{
                     width: 240,
                     flexShrink: 0,
@@ -180,41 +239,61 @@ export default function Header() {
                         boxSizing: 'border-box',
                     },
                 }}
-                BackdropProps={{
-                    invisible: true, // Убираем затемнение фона
-                }}
+                ModalProps={{ keepMounted: true }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    {/* Содержимое меню */}
-                    <List>
-                        <ListItem onClick={() => navigateTo('/')}>
-                            <ListItemText primary="Главная" />
-                        </ListItem>
-                        <ListItem onClick={() => navigateTo('/news')}>
-                            <ListItemText primary="Новости" />
-                        </ListItem>
-                        <ListItem onClick={() => navigateTo('/about')}>
-                            <ListItemText primary="О нас" />
-                        </ListItem>
-                        <ListItem onClick={() => navigateTo('/employees')}>
-                            <ListItemText primary="Список работников" />
-                        </ListItem>
-                    </List>
+                <DrawerHeader>
+                    <IconButton onClick={togglePinDrawer}>
+                        <PushPinIcon color={isDrawerPinned ? 'primary' : 'disabled'} />
+                    </IconButton>
+                    <IconButton onClick={handleDrawerClose}>
+                        {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+                    </IconButton>
+                </DrawerHeader>
 
-                    <Divider />
-
-                    {/* Значок закрепления на панели в правом верхнем углу бокового меню */}
-                    <Box sx={{ marginTop: 'auto', padding: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                        <IconButton
-                            color="inherit"
-                            onClick={togglePinDrawer}
-                            title={isDrawerPinned ? "Открепить меню" : "Закрепить меню"}
+                <Divider />
+                <List>
+                    {drawerNavItems.map(item => (
+                        <ListItem
+                            key={item.path}
+                            onClick={() => {
+                                navigateTo(item.path);
+                                handleDrawerClose();
+                            }}
+                            sx={{
+                                '&:hover': { backgroundColor: theme.palette.action.hover },
+                                cursor: 'pointer',
+                            }}
                         >
-                            <PushPinIcon />
-                        </IconButton>
-                    </Box>
-                </Box>
+                            <ListItemIcon>{item.icon}</ListItemIcon>
+                            <ListItemText primary={item.text} />
+                        </ListItem>
+                    ))}
+                </List>
+
+                {isAuthenticated && (
+                    <>
+                        <Divider />
+                        <List>
+                            {accountItems.map(item => (
+                                <ListItem
+                                    key={item.path}
+                                    onClick={() => {
+                                        item.onClick ? item.onClick() : navigateTo(item.path);
+                                        handleDrawerClose();
+                                    }}
+                                    sx={{
+                                        '&:hover': { backgroundColor: theme.palette.action.hover },
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    <ListItemIcon>{item.icon}</ListItemIcon>
+                                    <ListItemText primary={item.text} />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </>
+                )}
             </Drawer>
-        </AppBar>
+        </>
     );
 }

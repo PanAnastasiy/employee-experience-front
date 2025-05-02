@@ -1,7 +1,7 @@
 
 import React from 'react'
 import './Preview.css';
-import {useNavigation} from "../utils/UseNavigation";
+import {useNavigation} from "../utils/useNavigation";
 
 export default function Preview() {
     const { navigateTo } = useNavigation();
