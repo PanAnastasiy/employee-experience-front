@@ -29,24 +29,30 @@ export const getTechnologyById = async (technologyId: string) => {
     });
 };
 
-export const createTechnology = async (technology: Omit<Technology, 'id'>) => {
-    try {
-        const response = await fetch("http://localhost:8080/technologies", {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify(technology),
-        });
+ export const createTechnology = async (technology: Omit<Technology, 'id'>) => {
+     try {
+         const response = await fetch("http://localhost:8080/technologies", {
+             method: "POST",
+             headers: getAuthHeaders(),
+             body: JSON.stringify(technology),
+         });
 
-        if (!response.ok) {
-            throw new Error('Технология с такими данными уже существует.');
-        }
+         if (!response.ok) {
+             const errorData = await response.json(); // получаем структурированные данные ошибки
+             if (response.status === 409) {
+                 throw new Error(errorData.message || 'Такая технология уже существует.');
+             } else {
+                 throw new Error(`Ошибка ${response.status}: ${errorData.message || 'Неизвестная ошибка'}`);
+             }
+         }
 
-        return response.json();
-    } catch (error) {
-        console.error('Ошибка:', error);
-        throw error;
-    }
-};
+         return response.json();
+     } catch (error) {
+         console.error('Ошибка:', error);
+         throw error;
+     }
+ };
+
 
 export const updateTechnology = async (id: number, technology: Omit<Technology, 'id'>) => {
     try {

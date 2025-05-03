@@ -3,13 +3,14 @@ import {
     Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow,
     Paper, IconButton, TextField,
-    Dialog, DialogActions, DialogContent, DialogTitle, Button, Box
+    Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, Tooltip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
+import WorkOutlineIcon from '@mui/icons-material/WorkOutline';
 import { Position } from '../../../types/Position';
 
 interface Props {
@@ -96,14 +97,21 @@ const PositionTable: React.FC<Props> = ({
 
     return (
         <>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <TextField
-                    label="Поиск должностей"
-                    variant="outlined"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    fullWidth
-                />
+            <Box display="flex" alignItems="center" gap={2} mb={3}>
+                <WorkOutlineIcon fontSize="large" color="primary" />
+                <Box>
+                    <TextField
+                        label="Поиск должностей"
+                        variant="outlined"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        size="small"
+                        fullWidth
+                    />
+                    <Box mt={1}>
+                        <strong>Всего должностей:</strong> {positions.length}
+                    </Box>
+                </Box>
             </Box>
 
             <TableContainer component={Paper}>
@@ -135,21 +143,29 @@ const PositionTable: React.FC<Props> = ({
                                 <TableCell align="right">
                                     {editMode === pos.id ? (
                                         <>
-                                            <IconButton color="success" onClick={() => handleSaveClick(pos.id)}>
-                                                <SaveIcon />
-                                            </IconButton>
-                                            <IconButton color="error" onClick={handleCancel}>
-                                                <CancelIcon />
-                                            </IconButton>
+                                            <Tooltip title="Сохранить">
+                                                <IconButton color="success" onClick={() => handleSaveClick(pos.id)}>
+                                                    <SaveIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Отмена">
+                                                <IconButton color="error" onClick={handleCancel}>
+                                                    <CancelIcon />
+                                                </IconButton>
+                                            </Tooltip>
                                         </>
                                     ) : (
                                         <>
-                                            <IconButton color="primary" onClick={() => handleEditClick(pos)}>
-                                                <EditIcon />
-                                            </IconButton>
-                                            <IconButton color="error" onClick={() => handleOpenDialog(pos.id)}>
-                                                <DeleteIcon />
-                                            </IconButton>
+                                            <Tooltip title="Редактировать">
+                                                <IconButton color="primary" onClick={() => handleEditClick(pos)}>
+                                                    <EditIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Удалить">
+                                                <IconButton color="error" onClick={() => handleOpenDialog(pos.id)}>
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Tooltip>
                                         </>
                                     )}
                                 </TableCell>
@@ -169,12 +185,16 @@ const PositionTable: React.FC<Props> = ({
                                     />
                                 </TableCell>
                                 <TableCell align="right">
-                                    <IconButton color="success" onClick={handleAddSave}>
-                                        <SaveIcon />
-                                    </IconButton>
-                                    <IconButton color="error" onClick={handleCancel}>
-                                        <CancelIcon />
-                                    </IconButton>
+                                    <Tooltip title="Сохранить">
+                                        <IconButton color="success" onClick={handleAddSave}>
+                                            <SaveIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Отмена">
+                                        <IconButton color="error" onClick={handleCancel}>
+                                            <CancelIcon />
+                                        </IconButton>
+                                    </Tooltip>
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -206,10 +226,7 @@ const PositionTable: React.FC<Props> = ({
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>Отмена</Button>
-                    <Button
-                        onClick={() => handleDelete(positionIdToDelete!)}
-                        color="error"
-                    >
+                    <Button onClick={() => handleDelete(positionIdToDelete!)} color="error">
                         Удалить
                     </Button>
                 </DialogActions>
@@ -219,3 +236,4 @@ const PositionTable: React.FC<Props> = ({
 };
 
 export default PositionTable;
+

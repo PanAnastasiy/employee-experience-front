@@ -1,83 +1,87 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import TechnologyTable from './TechnologyTable/TechnologyTable';
-
-
+import {
+    Box, TextField, Button, Typography, Paper, IconButton,
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { motion } from 'framer-motion';
-import {Technology} from "../../types/Technology";
-import {SnackbarMessage} from "../SnackBarMessage/SnackBarMessage";
-import {createTechnology, deleteTechnology, getAllTechnologies, updateTechnology} from "../../api/technologies";
+import { SnackbarMessage } from '../SnackBarMessage/SnackBarMessage';
+import { Technology } from '../../types/Technology';
+import {
+    createTechnology,
+    deleteTechnology,
+    getAllTechnologies,
+    updateTechnology,
+} from '../../api/technologies';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
-
-// Стили
-const PageContainer = styled('div')({
+const PageLayout = styled(Box)({
     display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '16px',
-    padding: '16px',
-    maxWidth: '800px',
+    gridTemplateColumns: '2fr 1fr',
+    gap: '24px',
+    padding: '32px',
+    maxWidth: '1400px',
     margin: '0 auto',
 });
 
-const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 1 } },
-};
+const CardGrid = styled(Box)({
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '20px',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+    paddingRight: '8px',
+});
 
-const titleStyle: React.CSSProperties = {
-    color: 'white',
-    textAlign: 'center',
-    fontFamily: "'Roboto', sans-serif",
-    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-    letterSpacing: '2px',
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    backgroundImage: 'linear-gradient(45deg, #3f51b5, #2196f3)',
-    WebkitBackgroundClip: 'text',
-    padding: '10px',
-    marginBottom: '20px',
-};
+const TechCard = styled(motion(Paper))(({ theme }) => ({
+    padding: theme.spacing(3),
+    height: '220px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    borderRadius: '16px',
+    backgroundColor: '#e3f2fd',
+    transition: 'transform 0.3s',
+    '&:hover': {
+        transform: 'translateY(-5px)',
+        boxShadow: theme.shadows[6],
+    },
+}));
 
-// Тип для уведомлений
-type Notification = {
-    message: string;
-    type: 'success' | 'error';
-};
+const SidePanel = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(3),
+    borderRadius: '16px',
+    backgroundColor: '#f4f6f8',
+    height: 'fit-content',
+    position: 'sticky',
+    top: '32px',
+}));
 
 const TechnologyPage: React.FC = () => {
     const [technologies, setTechnologies] = useState<Technology[]>([]);
-    const [newTechnology, setNewTechnology] = useState<Omit<Technology, 'id'>>({ name: '', description: ''});
-    const [notification, setNotification] = useState<Notification>();
-    const [loading, setLoading] = useState(false);
+    const [newTech, setNewTech] = useState<Omit<Technology, 'id'>>({ name: '', description: '' });
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
+    const [editingId, setEditingId] = useState<number | null>(null);
 
-    // Загрузка данных
     useEffect(() => {
-        const fetchTechnologies = async () => {
-            setLoading(true);
+        (async () => {
             try {
                 const data = await getAllTechnologies();
                 setTechnologies(data);
-            } catch (error) {
-                console.error('Ошибка при загрузке:', error);
-                setNotification({
-                    message: 'Не удалось загрузить список технологий',
-                    type: 'error',
-                });
-            } finally {
-                setLoading(false);
+            } catch {
+                setNotification({ message: 'Ошибка загрузки технологий', type: 'error' });
             }
-        };
-
-        fetchTechnologies();
+        })();
     }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setNewTechnology(prev => ({ ...prev, [name]: value }));
+        setNewTech(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
     const handleAdd = useCallback(async () => {
-        if (!newTechnology.name.trim()) {
+        const normalizedName = newTech.name.trim().toLowerCase();
+
+        if (!normalizedName) {
             setNotification({
                 message: 'Название технологии обязательно для заполнения!',
                 type: 'error',
@@ -85,10 +89,26 @@ const TechnologyPage: React.FC = () => {
             return;
         }
 
+        const isDuplicate = technologies.some(
+            tech => tech.name.trim().toLowerCase() === normalizedName
+        );
+
+        if (isDuplicate) {
+            setNotification({
+                message: 'Технология с таким названием уже существует!',
+                type: 'error',
+            });
+            return;
+        }
+
         try {
-            const created = await createTechnology({ name: newTechnology.name.trim(), description:newTechnology.description.trim() });
+            const created = await createTechnology({
+                name: newTech.name.trim(),
+                description: newTech.description.trim()
+            });
+
             setTechnologies(prev => [...prev, created]);
-            setNewTechnology({ name: '', description:'' });
+            setNewTech({ name: '', description: '' });
             setNotification({
                 message: 'Технология успешно добавлена!',
                 type: 'success',
@@ -99,67 +119,116 @@ const TechnologyPage: React.FC = () => {
                 type: 'error',
             });
         }
-    }, [newTechnology]);
+    }, [newTech, technologies]);
 
-    const handleEdit = useCallback(async (id: number, updated: Omit<Technology, 'id'>) => {
-        try {
-            const result = await updateTechnology(id, updated);
-            setTechnologies(prev =>
-                prev.map(tech => (tech.id === id ? result : tech))
-            );
-            setNotification({
-                message: `Технология "${result.name}" успешно обновлена`,
-                type: 'success',
-            });
-        } catch (error: any) {
-            setNotification({
-                message: error.message || 'Ошибка при обновлении технологии',
-                type: 'error',
-            });
-        }
-    }, []);
 
-    const handleDelete = useCallback(async (id: number) => {
+    const handleDelete = async (id: number) => {
         try {
-            const name = technologies.find(t => t.id === id)?.name || '';
             await deleteTechnology(id);
             setTechnologies(prev => prev.filter(t => t.id !== id));
-            setNotification({
-                message: `Технология "${name}" успешно удалена`,
-                type: 'success',
-            });
-        } catch (error: any) {
-            setNotification({
-                message: error.message || 'Ошибка при удалении технологии',
-                type: 'error',
-            });
+            setNotification({ message: 'Удалено', type: 'success' });
+        } catch {
+            setNotification({ message: 'Ошибка удаления', type: 'error' });
         }
-    }, [technologies]);
+    };
+
+    const handleEdit = async () => {
+        if (editingId === null) return;
+        try {
+            const updated = await updateTechnology(editingId, newTech);
+            setTechnologies(prev =>
+                prev.map(t => (t.id === editingId ? updated : t))
+            );
+            setEditingId(null);
+            setNewTech({ name: '', description: '' });
+            setNotification({ message: 'Обновлено', type: 'success' });
+        } catch {
+            setNotification({ message: 'Ошибка обновления', type: 'error' });
+        }
+    };
+
+    const startEditing = (tech: Technology) => {
+        setEditingId(tech.id);
+        setNewTech({ name: tech.name, description: tech.description });
+    };
 
     return (
-        <PageContainer>
-            <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-                <motion.h1 style={titleStyle}>
-                    Список технологий
-                </motion.h1>
+        <PageLayout>
+            <CardGrid>
+                {technologies.map((tech, i) => (
+                    <TechCard
+                        key={tech.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: i * 0.05 }}
+                    >
+                        <Typography variant="h6">{tech.name}</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            {tech.description || 'Нет описания'}
+                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                            <IconButton size="small" color="primary" onClick={() => startEditing(tech)}>
+                                <EditIcon />
+                            </IconButton>
+                            <IconButton size="small" color="error" onClick={() => handleDelete(tech.id)}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </Box>
+                    </TechCard>
+                ))}
+            </CardGrid>
 
-                <TechnologyTable
-                    technologies={technologies}
-                    newTechnology={newTechnology}
-                    onAdd={handleAdd}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onInputChange={handleInputChange}
+            <SidePanel elevation={3}>
+                <Typography variant="h6" gutterBottom>
+                    {editingId ? 'Редактировать технологию' : 'Добавить технологию'}
+                </Typography>
+                <TextField
+                    label="Название"
+                    name="name"
+                    value={newTech.name}
+                    onChange={handleInputChange}
+                    fullWidth
+                    margin="normal"
                 />
-            </motion.div>
+                <TextField
+                    label="Описание"
+                    name="description"
+                    value={newTech.description}
+                    onChange={handleInputChange}
+                    fullWidth
+                    multiline
+                    rows={3}
+                    margin="normal"
+                />
+                <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ mt: 2 }}
+                    onClick={editingId ? handleEdit : handleAdd}
+                >
+                    {editingId ? 'Сохранить' : 'Добавить'}
+                </Button>
+                {editingId && (
+                    <Button
+                        fullWidth
+                        sx={{ mt: 1 }}
+                        onClick={() => {
+                            setEditingId(null);
+                            setNewTech({ name: '', description: '' });
+                        }}
+                    >
+                        Отменить
+                    </Button>
+                )}
+            </SidePanel>
 
             <SnackbarMessage
                 notification={notification}
                 handleClose={() => setNotification(undefined)}
             />
-        </PageContainer>
+        </PageLayout>
     );
 };
 
 export default TechnologyPage;
-

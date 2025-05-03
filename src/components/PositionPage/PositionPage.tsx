@@ -2,37 +2,8 @@ import React, { useState, useEffect } from 'react';
 import PositionTable from './PositionTable/PositionTable';
 import { Position } from '../../types/Position';
 import { getAllPositions, updatePosition, deletePosition, createPosition } from '../../api/positions';
-import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
 import { SnackbarMessage } from "../SnackBarMessage/SnackBarMessage";
-
-const PageContainer = styled('div')({
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '16px',
-    padding: '16px',
-    maxWidth: '800px',
-    margin: '0 auto'
-});
-
-const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 1 } },
-};
-
-const titleStyle = {
-    color: 'white',
-    textAlign: 'center' as const,
-    fontFamily: "'Roboto', sans-serif",
-    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-    letterSpacing: '2px',
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    backgroundImage: 'linear-gradient(45deg, #3f51b5, #2196f3)',
-    WebkitBackgroundClip: 'text',
-    padding: '10px',
-    marginBottom: '20px'
-};
+import './PositionPage.css';
 
 const PositionPage: React.FC = () => {
     const [positions, setPositions] = useState<Position[]>([]);
@@ -132,11 +103,9 @@ const PositionPage: React.FC = () => {
     };
 
     return (
-        <PageContainer className="page-container">
-            <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-                <motion.h1 style={titleStyle}>
-                    Список должностей
-                </motion.h1>
+        <div className="position-page">
+            <div className="glass-card">
+                <h1 className="page-title">Список должностей</h1>
 
                 <PositionTable
                     positions={positions}
@@ -146,13 +115,13 @@ const PositionPage: React.FC = () => {
                     onDelete={handleDelete}
                     onInputChange={handleInputChange}
                 />
-            </motion.div>
 
-            <SnackbarMessage
-                notification={notification}
-                handleClose={() => setNotification(undefined)}
-            />
-        </PageContainer>
+                <SnackbarMessage
+                    notification={notification}
+                    handleClose={() => setNotification(undefined)}
+                />
+            </div>
+        </div>
     );
 };
 

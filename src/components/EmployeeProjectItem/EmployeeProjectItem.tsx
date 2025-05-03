@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { TextField, Box, List, ListItem, ListItemText, Button, Grid, ListItemButton } from '@mui/material';
-import { searchEmployees } from "../../api/employees";
+import {
+    TextField, Box, Grid, Button, List, ListItemText, ListItemButton, Paper
+} from '@mui/material';
+import { searchEmployees } from '../../api/employees';
 
 interface EmployeeProjectItemProps {
     employee: {
@@ -15,45 +17,47 @@ interface EmployeeProjectItemProps {
 }
 
 const EmployeeProjectItem: React.FC<EmployeeProjectItemProps> = ({ employee, onChange, onDelete }) => {
-    const [employeeSuggestions, setEmployeeSuggestions] = useState<{ id: number, fullName: string }[]>([]); // Типизация для предложений сотрудников
+    const [employeeSuggestions, setEmployeeSuggestions] = useState<{ id: number, fullName: string }[]>([]);
 
     const handleEmployeeNameChange = async (value: string) => {
-        // Обновляем имя сотрудника
         onChange('fullName', value);
 
-        if (value) {
-            // Запрашиваем сотрудников, если имя не пустое
+        if (value.length >= 2) {
             try {
                 const employees = await searchEmployees(value);
-                setEmployeeSuggestions(employees);  // Сохраняем найденных сотрудников
+                // Собираем fullName вручную
+                const suggestions = employees.map((e: any) => ({
+                    id: e.id,
+                    fullName: `${e.firstName} ${e.lastName}`
+                }));
+                setEmployeeSuggestions(suggestions);
             } catch (error) {
                 console.error("Ошибка при поиске сотрудников", error);
+                setEmployeeSuggestions([]);
             }
         } else {
-            // Если поле пустое, очищаем предложения
             setEmployeeSuggestions([]);
         }
     };
 
+
     return (
-        <Box marginBottom={2}>
+        <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
             <TextField
                 label="Имя сотрудника"
                 value={employee.fullName}
-                onChange={(e) => handleEmployeeNameChange(e.target.value)}  // Вызов функции для поиска
+                onChange={(e) => handleEmployeeNameChange(e.target.value)}
                 fullWidth
             />
-
-            {/* Если есть предложения, отображаем их */}
             {employeeSuggestions.length > 0 && (
-                <List>
-                    {employeeSuggestions.map((emp) => (
+                <List dense>
+                    {employeeSuggestions.map(emp => (
                         <ListItemButton
                             key={emp.id}
                             onClick={() => {
+                                onChange('employeeId', emp.id);
                                 onChange('fullName', emp.fullName);
-                                onChange('employeeId', emp.id);  // Записываем ID сотрудника
-                                setEmployeeSuggestions([]);  // Очищаем предложения
+                                setEmployeeSuggestions([]);
                             }}
                         >
                             <ListItemText primary={emp.fullName} />
@@ -68,10 +72,11 @@ const EmployeeProjectItem: React.FC<EmployeeProjectItemProps> = ({ employee, onC
                 onChange={(e) => onChange('description', e.target.value)}
                 fullWidth
                 multiline
-                minRows={3}
-                style={{ marginTop: 8 }}
+                minRows={2}
+                sx={{ mt: 2 }}
             />
-            <Grid container spacing={2} style={{ marginTop: 8 }}>
+
+            <Grid container spacing={2} mt={1}>
                 <Grid item xs={6}>
                     <TextField
                         label="Дата начала"
@@ -93,10 +98,17 @@ const EmployeeProjectItem: React.FC<EmployeeProjectItemProps> = ({ employee, onC
                     />
                 </Grid>
             </Grid>
-            <Button variant="contained" color="error" onClick={onDelete} style={{ marginTop: 8 }}>
-                Удалить
+
+            <Button
+                variant="outlined"
+                color="error"
+                onClick={onDelete}
+                fullWidth
+                sx={{ mt: 2 }}
+            >
+                ❌ Удалить работника
             </Button>
-        </Box>
+        </Paper>
     );
 };
 

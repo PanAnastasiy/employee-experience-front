@@ -1,39 +1,108 @@
 import React from "react";
 
+import { Box, Typography, Link, IconButton, Divider, Grid } from '@mui/material';
+import { Facebook, Twitter, LinkedIn, GitHub } from '@mui/icons-material';
 
-export function FooterBlock() {
+const Footer: React.FC = () => {
     return (
-        <footer className="w-full bg-gray-800 text-white py-8">
-            <div className="container mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                <div className="flex flex-col items-center md:items-start">
-                    <h2 className="text-3xl font-bold text-gray-100 mb-2">Your Company</h2>
-                    <p className="text-gray-400 text-sm">
-                        Providing quality services since 2020. We help businesses achieve their goals.
-                    </p>
-                </div>
+        <Box
+            sx={{
+                backgroundColor: '#333',
+                color: 'white',
+                padding: '20px',
+            }}
+        >
+            <Divider sx={{ marginBottom: '20px' }} />
+            <Grid container spacing={4}>
+                {/* Социальные сети */}
+                <Grid item xs={12} sm={6} md={3}>
+                    <Typography variant="h6" sx={{ marginBottom: '10px' }}>
+                        Социальные сети
+                    </Typography>
+                    <Box>
+                        <IconButton
+                            component={Link}
+                            href="https://facebook.com"
+                            target="_blank"
+                            sx={{ color: 'white', marginRight: '10px' }}
+                        >
+                            <Facebook />
+                        </IconButton>
+                        <IconButton
+                            component={Link}
+                            href="https://twitter.com"
+                            target="_blank"
+                            sx={{ color: 'white', marginRight: '10px' }}
+                        >
+                            <Twitter />
+                        </IconButton>
+                        <IconButton
+                            component={Link}
+                            href="https://linkedin.com"
+                            target="_blank"
+                            sx={{ color: 'white', marginRight: '10px' }}
+                        >
+                            <LinkedIn />
+                        </IconButton>
+                        <IconButton
+                            component={Link}
+                            href="https://github.com"
+                            target="_blank"
+                            sx={{ color: 'white', marginRight: '10px' }}
+                        >
+                            <GitHub />
+                        </IconButton>
+                    </Box>
+                </Grid>
 
-                <div className="flex space-x-6">
-                    <a href="https://facebook.com" className="text-gray-400 hover:text-blue-600">
-                        <i className="fab fa-facebook-f"></i> Facebook
-                    </a>
-                    <a href="https://twitter.com" className="text-gray-400 hover:text-blue-400">
-                        <i className="fab fa-twitter"></i> Twitter
-                    </a>
-                    <a href="https://linkedin.com" className="text-gray-400 hover:text-blue-700">
-                        <i className="fab fa-linkedin-in"></i> LinkedIn
-                    </a>
-                </div>
+                {/* Лицензия */}
+                <Grid item xs={12} sm={6} md={3}>
+                    <Typography variant="h6" sx={{ marginBottom: '10px' }}>
+                        Лицензия
+                    </Typography>
+                    <Typography variant="body2">
+                        Программное обеспечение предоставляется под лицензией MIT.
+                    </Typography>
+                </Grid>
 
-                <div className="flex flex-col items-center md:items-end">
-                    <p className="text-gray-400 text-sm">
-                        © 2025 Your Company. All rights reserved.
-                    </p>
-                    <div className="flex space-x-4 mt-2">
-                        <a href="/privacy" className="text-gray-400 hover:text-gray-100">Privacy Policy</a>
-                        <a href="/terms" className="text-gray-400 hover:text-gray-100">Terms of Service</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
+                {/* Полезные ссылки */}
+                <Grid item xs={12} sm={6} md={3}>
+                    <Typography variant="h6" sx={{ marginBottom: '10px' }}>
+                        Полезные ссылки
+                    </Typography>
+                    <Box>
+                        <Link href="/about" color="inherit" sx={{ display: 'block', marginBottom: '8px' }}>
+                            О нас
+                        </Link>
+                        <Link href="/contact" color="inherit" sx={{ display: 'block', marginBottom: '8px' }}>
+                            Контакты
+                        </Link>
+                        <Link href="/privacy" color="inherit" sx={{ display: 'block', marginBottom: '8px' }}>
+                            Политика конфиденциальности
+                        </Link>
+                    </Box>
+                </Grid>
+
+                {/* Контакты */}
+                <Grid item xs={12} sm={6} md={3}>
+                    <Typography variant="h6" sx={{ marginBottom: '10px' }}>
+                        Контакты
+                    </Typography>
+                    <Typography variant="body2">Email: pan@company.com</Typography>
+                    <Typography variant="body2">Телефон: +375 (29) 237-425-05</Typography>
+                </Grid>
+            </Grid>
+
+            {/* Копирайт */}
+            <Divider sx={{ marginTop: '20px' }} />
+            <Box sx={{ textAlign: 'center', marginTop: '10px' }}>
+                <Typography variant="body2">
+                    © {new Date().getFullYear()} Все права защищены.
+                </Typography>
+            </Box>
+        </Box>
     );
-}
+};
+
+export default Footer;
+
