@@ -132,6 +132,7 @@ export default function Header() {
         { text: 'Главная', path: '/', icon: <HomeIcon /> },
         { text: 'Новости', path: '/news', icon: <HomeIcon /> },
         { text: 'О нас', path: '/about', icon: <InfoIcon /> },
+        { text: 'Документация', path: '/documentation', icon: <InfoIcon /> },
     ];
 
     const roleBasedNavItems = {
@@ -177,11 +178,6 @@ export default function Header() {
                                     {item.text}
                                 </Button>
                             ))}
-                            {isAuthenticated && (
-                                <Button color="inherit" onClick={() => navigateTo('/profile')} sx={{ mx: 0.5 }}>
-                                    Профиль
-                                </Button>
-                            )}
                         </Box>
                     )}
 

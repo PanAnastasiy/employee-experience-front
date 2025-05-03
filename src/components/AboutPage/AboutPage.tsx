@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
     Container,
@@ -9,95 +8,130 @@ import {
     Box,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { motion } from 'framer-motion';
+
+// Анимация для изображения
+const imageAnimation = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 1.8, ease: 'easeInOut' } },
+};
+
+// Анимация для карточек с задержкой
+const cardAnimation = {
+    hidden: { opacity: 0, y: 40 },
+    visible: (i: number) => ({
+        opacity: 1,
+        y: 0,
+        transition: {
+            delay: i * 0.25,
+            duration: 0.6,
+            ease: 'easeOut',
+        },
+    }),
+};
 
 export default function AboutPage() {
     const theme = useTheme();
 
+    const cards = [
+        {
+            title: 'Наша миссия',
+            text: 'Создавать технологии, которые улучшают жизнь миллионов пользователей каждый день.',
+        },
+        {
+            title: 'Наши ценности',
+            text: 'Прозрачность, инновации и страсть к решению сложных задач — основа нашей работы.',
+        },
+        {
+            title: 'Наша команда',
+            text: 'Опытные специалисты из разных сфер объединены идеей изменить цифровой мир.',
+        },
+    ];
+
     return (
-        <Container sx={{ py: 8 }}>
-            {/* Заголовок страницы */}
-            <Typography
-                variant="h2"
-                component="h1"
-                align="center"
-                gutterBottom
-                sx={{ fontWeight: 'bold', color: theme.palette.primary.main }}
-            >
-                О нашей компании
-            </Typography>
-
-            {/* Основной текст */}
-            <Typography variant="body1" align="center" paragraph>
-                Мы — современная компания, которая специализируется на создании
-                инновационных решений для наших клиентов. Наша миссия — делать мир лучше
-                с помощью технологий.
-            </Typography>
-
-            {/* Секция с карточками */}
-            <Grid container spacing={4} sx={{ mt: 4 }}>
-                {/* Карточка 1: Наша миссия */}
-                <Grid item xs={12} md={4}>
-                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        <CardContent sx={{ flexGrow: 1 }}>
-                            <Typography variant="h5" component="h2" gutterBottom>
-                                Наша миссия
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Мы стремимся создавать продукты, которые улучшают жизнь людей и
-                                делают мир более удобным и безопасным.
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Карточка 2: Наши ценности */}
-                <Grid item xs={12} md={4}>
-                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        <CardContent sx={{ flexGrow: 1 }}>
-                            <Typography variant="h5" component="h2" gutterBottom>
-                                Наши ценности
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Мы ценим честность, инновации и качество. Каждый наш проект —
-                                это результат упорной работы и внимания к деталям.
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Карточка 3: Наша команда */}
-                <Grid item xs={12} md={4}>
-                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        <CardContent sx={{ flexGrow: 1 }}>
-                            <Typography variant="h5" component="h2" gutterBottom>
-                                Наша команда
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Наша команда состоит из профессионалов, которые любят своё дело
-                                и всегда готовы предложить лучшее решение для вашего бизнеса.
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
-
-            {/* Секция с изображением */}
-            <Box sx={{ mt: 8, textAlign: 'center' }}>
-                <img
-                    src="https://via.placeholder.com/800x400" // Замените на реальное изображение
-                    alt="О нашей компании"
-                    style={{ width: '100%', maxWidth: '800px', borderRadius: '8px' }}
-                />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                    Наш офис — это место, где рождаются идеи и воплощаются мечты.
+        <Box
+            sx={{
+                minHeight: '100vh',
+                background: 'linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)',
+                py: 8,
+                px: 2,
+            }}
+        >
+            <Container maxWidth="lg">
+                <Typography
+                    variant="h2"
+                    align="center"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 'bold',
+                        color: theme.palette.primary.dark,
+                        mb: 4,
+                    }}
+                >
+                    О нашей компании
                 </Typography>
-            </Box>
 
-            {/* Дополнительный текст */}
-            <Typography variant="body1" align="center" sx={{ mt: 8 }}>
-                Мы гордимся тем, что делаем, и всегда открыты для новых вызовов. Если у
-                вас есть вопросы или идеи, свяжитесь с нами!
-            </Typography>
-        </Container>
+                <Typography variant="body1" align="center" paragraph sx={{ maxWidth: '700px', mx: 'auto' }}>
+                    Мы создаём инновационные решения для настоящего и будущего. Технологии должны быть не только эффективными, но и красивыми.
+                </Typography>
+
+                {/* Карточки */}
+                <Grid container spacing={4} justifyContent="center" sx={{ mt: 4 }}>
+                    {cards.map((card, i) => (
+                        <Grid item xs={12} md={4} key={i}>
+                            <motion.div
+                                custom={i}
+                                variants={cardAnimation}
+                                initial="hidden"
+                                animate="visible"
+                            >
+                                <Card
+                                    sx={{
+                                        height: '300px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        backgroundColor: '#fff',
+                                        borderRadius: 3,
+                                        boxShadow: 4,
+                                        p: 2,
+                                    }}
+                                >
+                                    <CardContent>
+                                        <Typography variant="h5" gutterBottom fontWeight="bold">
+                                            {card.title}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {card.text}
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </Grid>
+                    ))}
+                </Grid>
+
+                {/* Изображение и текст */}
+                <Box sx={{ mt: 8, textAlign: 'center' }}>
+                    <motion.img
+                        src="/static/images/about.jpg"
+                        alt="Офис"
+                        variants={imageAnimation}
+                        initial="hidden"
+                        animate="visible"
+                        style={{
+                            width: '100%',
+                            maxWidth: '800px',
+                            borderRadius: '12px',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                            opacity: '0.5'
+                        }}
+                    />
+                    <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+                        Вдохновляющая среда — источник наших лучших решений.
+                    </Typography>
+                </Box>
+            </Container>
+        </Box>
     );
 }
